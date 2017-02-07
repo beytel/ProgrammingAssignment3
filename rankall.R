@@ -6,14 +6,15 @@ rankall <- function(outcome, num = "best") {
   ## Read outcome data
   my_data<-read.csv("outcome-of-care-measures.csv",colClasses = "character") ## Reading the outcome data file
   states<-unique(my_data$State)
+  states<-states[order(states)]
   ## Check that state and outcome are valid
   if(!outcome %in% check$input )stop("invalid outcome")
   check<-subset(check, check$input==outcome)
   myoutcome<-as.character(check$output)
-  
+  numstates<-length(states)
   ## For each state, find the hospital of the given rank
-  for(i in 1:lenght(states)){
-    my_state<-subset(my_data,select=c("Hospital.Name","State","Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack","Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure","Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia"),my_data$State == state[i])## subseting the data by state
+  for(i in 1:numstates){
+    my_state<-subset(my_data,select=c("Hospital.Name","State","Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack","Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure","Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia"),my_data$State == states[i])## subseting the data by state
     my_state<-subset(my_state,my_state[,myoutcome]!= "Not Available")
     my_state["rank"]<-myrank<-rank(as.numeric(as.character(my_state[,myoutcome])))
     ## 30-day death rate
@@ -32,9 +33,12 @@ rankall <- function(outcome, num = "best") {
     else{
       stop("invalid num")
     }
+    if(is.na(my_state$Hospital.Name))my_state<-data.frame(Hospital.Name="NA", State=states[i])
+    if(nrow(my_state)>1)my_state<-subset(my_state[1,])
     newstate<-subset(my_state,select=c("Hospital.Name","State"))
     myoutput=rbind(myoutput,newstate)
   }
   ## Return a data frame with the hospital names and the
+  return(myoutput)[order(myoutput$state)]
   ## (abbreviated) state name
 }
